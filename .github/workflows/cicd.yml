@@ -1,0 +1,40 @@
+name: Deploy Node Application
+
+on:
+  push: 
+    branches:
+      - integration
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Create .env file
+        run: echo "NODE_ENV=production" >> .env
+      - name: Login to docker hub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build docker image for API
+        run: docker build -t braianmg/web-app-test-amazon-api ./api
+      - name: Publish image to docker hub
+        run: docker push braianmg/web-app-test-amazon-api:latest
+      - name: Build docker image for UI
+        run: docker build -t braianmg/web-app-test-amazon-ui ./ui
+      - name: Publish image to docker hub
+        run: docker push braianmg/web-app-test-amazon-ui:latest
+
+  deploy:
+    needs: build
+    runs-on: self-hosted
+    steps:
+      - name: Pull API image from docker hub
+        run: docker pull braianmg/web-app-test-amazon-api:latest
+      - name: Delete old API container
+        run: docker rm -f web-app-test-amazon-api-container
+      - name: Run docker API container
+        run: docker run -d -p 3000:3000 --name nodejs-app-container braianmg/web-app-test-amazon-api
+      - name: Delete old UI container
+        run: docker rm -f web-app-test-amazon-ui-container
+      - name: Run docker UI container
+        run: docker run -d -p 8080:80 --name nodejs-app-container braianmg/web-app-test-amazon-ui
