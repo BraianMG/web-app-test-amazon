@@ -34,6 +34,8 @@ jobs:
         run: docker rm -f web-app-test-amazon-api-container
       - name: Run docker API container
         run: docker run -d -p 3000:3000 --name nodejs-app-container braianmg/web-app-test-amazon-api
+      - name: Pull UI image from docker hub
+        run: docker pull braianmg/web-app-test-amazon-ui:latest
       - name: Delete old UI container
         run: docker rm -f web-app-test-amazon-ui-container
       - name: Run docker UI container
